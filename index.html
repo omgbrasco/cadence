@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cadence</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#E4E1D8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cadence">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+  :root{
+    --ground:#E4E1D8; --panel:#EFEDE6; --ink:#1C2A2C; --ink-soft:#5A6A6B;
+    --line:#C8C4B7; --brass:#A97514; --pine:#2F6A5E; --clay:#9E4436; --radius:3px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{background:var(--ground)}
+  body{margin:0;color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer;background:none;border:none;padding:0}
+  :focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 16px 90px}
+  .masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;border-bottom:1.5px solid var(--ink);padding-bottom:9px;flex-wrap:wrap}
+  .title{font-family:var(--serif);font-size:29px;line-height:1;margin:0}
+  .date{font-family:var(--serif);font-size:14px;color:var(--ink-soft)}
+  .tabs{display:flex;gap:2px;margin:13px 0 18px;flex-wrap:wrap}
+  .tab{padding:6px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:13px}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+  .grid{display:grid;grid-template-columns:225px 1fr;gap:20px;align-items:start}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .rail{display:flex;flex-direction:column;gap:1px;border:1px solid var(--line);background:var(--line);border-radius:var(--radius);overflow:hidden}
+  .railitem{background:var(--panel);padding:9px 11px;text-align:left;width:100%}
+  .railitem[aria-current="true"]{background:var(--ink);color:var(--ground)}
+  .railitem .rl{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .railitem .rc{font-family:var(--serif);font-size:15px}
+  .meter{height:3px;background:var(--line);margin-top:6px;position:relative}
+  .railitem[aria-current="true"] .meter{background:#3d4d4f}
+  .meter i{position:absolute;inset:0 auto 0 0;background:var(--pine)}
+  .sub{font-size:11px;color:var(--ink-soft);margin-top:4px;display:block}
+  .railitem[aria-current="true"] .sub{color:#9fb0b0}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px}
+  .panel + .panel{margin-top:16px}
+  h2{font-family:var(--serif);font-size:19px;margin:0 0 2px;font-weight:600}
+  .lede{color:var(--ink-soft);font-size:12.5px;margin:0 0 13px}
+  .rt{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--line);align-items:flex-start}
+  .rt:first-of-type{border-top:none}
+  .tick{width:30px;height:30px;flex:0 0 30px;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-size:12px;margin-top:1px}
+  .tick.done{background:var(--pine);border-color:var(--pine);color:#fff}
+  .tick.part{border-color:var(--brass);color:var(--brass)}
+  .rtb{flex:1;min-width:0}
+  .rtn{font-size:14.5px}
+  .rt.done .rtn{color:var(--ink-soft);text-decoration:line-through}
+  .rtm{font-size:11.5px;color:var(--ink-soft);display:flex;gap:9px;flex-wrap:wrap;margin-top:2px;align-items:center}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .hist{display:flex;gap:2px}
+  .hist span{width:9px;height:9px;background:var(--line);border-radius:1px}
+  .hist span.on{background:var(--pine)}
+  .hist span.half{background:var(--brass)}
+  .mini{font-size:11.5px;color:var(--ink-soft);border-bottom:1px solid var(--line)}
+  .det{margin:8px 0 2px;padding:9px 11px;background:var(--ground);border-radius:var(--radius);font-size:12.5px}
+  .det img{max-width:100%;border-radius:2px;margin-top:8px;display:block}
+  .det a{color:var(--pine)}
+  .field{display:block;margin-bottom:9px}
+  .field span{display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:3px}
+  input,select,textarea{width:100%;padding:8px 9px;background:var(--ground);border:1px solid var(--line);border-radius:var(--radius)}
+  textarea{min-height:70px;resize:vertical;font-family:var(--sans)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+  .btn{padding:8px 14px;background:var(--ink);color:var(--ground);border-radius:var(--radius);font-size:13px}
+  .btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+  .btn.warn{background:var(--clay);color:#fff}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:15px}
+  .stat{background:var(--panel);padding:11px}
+  .stat b{font-family:var(--serif);font-size:25px;font-weight:600;display:block;line-height:1.1}
+  .stat span{font-size:11px;color:var(--ink-soft)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-weight:500;color:var(--ink-soft);font-size:11px;border-bottom:1px solid var(--line);padding:0 6px 5px 0}
+  td{padding:6px 6px 6px 0;border-bottom:1px solid var(--line)}
+  .empty{color:var(--ink-soft);font-size:13px;padding:14px 0}
+  .tagbtn{font-size:11px;padding:4px 9px;border:1px solid var(--line);border-radius:99px}
+  .tagbtn[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+  .goal{border-top:1px solid var(--line);padding:11px 0}
+  .goal:first-of-type{border-top:none}
+  .bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+  .bar i{display:block;height:100%;background:var(--brass)}
+  .note{white-space:pre-wrap}
+  .toast{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));right:14px;background:var(--ink);color:var(--ground);padding:7px 13px;border-radius:99px;font-size:12px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+  .toast.on{opacity:1}
+  .hr{border:none;border-top:1px solid var(--line);margin:15px 0}
+  code{background:var(--ground);padding:1px 4px;border-radius:2px;font-size:12px}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--ink-soft)}
+  .pill.live{border-color:var(--pine);color:var(--pine)}
+  .pill.off{border-color:var(--clay);color:var(--clay)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <h1 class="title">Cadence</h1>
+    <div class="date"><span id="today"></span> <span id="syncpill" class="pill">local only</span></div>
+  </div>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="view"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ constants ============ */
+const CAD=[
+ {id:'daily',label:'Daily',short:'day',rrule:'FREQ=DAILY'},
+ {id:'weekly',label:'Weekly',short:'week',rrule:'FREQ=WEEKLY'},
+ {id:'biweekly',label:'Every 2 weeks',short:'fortnight',rrule:'FREQ=WEEKLY;INTERVAL=2'},
+ {id:'monthly',label:'Monthly',short:'month',rrule:'FREQ=MONTHLY'},
+ {id:'quarterly',label:'Every 3 months',short:'quarter',rrule:'FREQ=MONTHLY;INTERVAL=3'},
+ {id:'semiannual',label:'Every 6 months',short:'half-year',rrule:'FREQ=MONTHLY;INTERVAL=6'},
+ {id:'yearly',label:'Yearly',short:'year',rrule:'FREQ=YEARLY'}];
+const CATS={body:'#9E4436',mind:'#2F6A5E',home:'#A97514',work:'#3B5A80',money:'#6B5B95',people:'#7A8B3F',craft:'#2C6E7F'};
+const METRICS=[['steps','Steps'],['sleep','Sleep (h)'],['rhr','Resting HR'],['workouts','Workouts'],['weight','Weight'],['mood','Mood 1-5'],['energy','Energy 1-5']];
+const KEY='cadence-state-v3', TKEY='cadence-token', GKEY='cadence-gist';
+
+let S={routines:[],logs:{},metrics:{},goals:[],journal:[],updated:0,v:3};
+let tab='today', cad='daily', open={}, ready=false, timers=[];
+
+/* ============ device storage (works hosted and inside Claude) ============ */
+const local={
+  get(k){ try{return localStorage.getItem(k);}catch(e){return null;} },
+  set(k,v){ try{localStorage.setItem(k,v);}catch(e){} },
+  del(k){ try{localStorage.removeItem(k);}catch(e){} }
+};
+async function readLocal(){
+  const s=local.get(KEY); if(s)return s;
+  if(window.storage){ try{const r=await window.storage.get(KEY); return r&&r.value;}catch(e){} }
+  return null;
+}
+async function writeLocal(s){
+  local.set(KEY,s);
+  if(window.storage){ try{await window.storage.set(KEY,s);}catch(e){} }
+}
+
+/* ============ period math ============ */
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const pad=n=>String(n).padStart(2,'0');
+function periodKey(c,d){
+  const y=d.getFullYear();
+  if(c==='daily')return iso(d);
+  if(c==='weekly'){const t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()+3-((t.getDay()+6)%7));const w1=new Date(t.getFullYear(),0,4);return t.getFullYear()+'-W'+pad(1+Math.round(((t-w1)/864e5-3+((w1.getDay()+6)%7))/7));}
+  if(c==='biweekly')return 'B'+Math.floor((Date.UTC(y,d.getMonth(),d.getDate())-Date.UTC(1970,0,5))/864e5/14);
+  if(c==='monthly')return y+'-'+pad(d.getMonth()+1);
+  if(c==='quarterly')return y+'-Q'+(Math.floor(d.getMonth()/3)+1);
+  if(c==='semiannual')return y+'-H'+(d.getMonth()<6?1:2);
+  return String(y);
+}
+function shift(c,d,n){const x=new Date(d);
+  if(c==='daily')x.setDate(x.getDate()+n);
+  else if(c==='weekly')x.setDate(x.getDate()+7*n);
+  else if(c==='biweekly')x.setDate(x.getDate()+14*n);
+  else if(c==='monthly')x.setMonth(x.getMonth()+n);
+  else if(c==='quarterly')x.setMonth(x.getMonth()+3*n);
+  else if(c==='semiannual')x.setMonth(x.getMonth()+6*n);
+  else x.setFullYear(x.getFullYear()+n);
+  return x;}
+function bounds(c,d){
+  const y=d.getFullYear(),m=d.getMonth();
+  if(c==='daily')return[new Date(y,m,d.getDate()),new Date(y,m,d.getDate()+1)];
+  if(c==='biweekly'){const n=Math.floor((Date.UTC(y,m,d.getDate())-Date.UTC(1970,0,5))/864e5/14);const st=new Date(Date.UTC(1970,0,5)+n*14*864e5);const a=new Date(st.getUTCFullYear(),st.getUTCMonth(),st.getUTCDate());return[a,new Date(a.getFullYear(),a.getMonth(),a.getDate()+14)];}
+  if(c==='weekly'){const s=new Date(y,m,d.getDate()-((d.getDay()+6)%7));return[s,new Date(s.getFullYear(),s.getMonth(),s.getDate()+7)];}
+  if(c==='monthly')return[new Date(y,m,1),new Date(y,m+1,1)];
+  if(c==='quarterly'){const q=Math.floor(m/3)*3;return[new Date(y,q,1),new Date(y,q+3,1)];}
+  if(c==='semiannual'){const h=m<6?0:6;return[new Date(y,h,1),new Date(y,h+6,1)];}
+  return[new Date(y,0,1),new Date(y+1,0,1)];
+}
+const elapsed=c=>{const n=new Date(),[a,b]=bounds(c,n);return Math.min(1,(n-a)/(b-a));};
+function leftText(c){const n=new Date(),[,b]=bounds(c,n),h=(b-n)/36e5;
+  return h<24?Math.max(0,Math.round(h))+'h left':Math.ceil(h/24)+'d left';}
+
+/* ============ data helpers ============ */
+const rts=c=>S.routines.filter(r=>r.cadence===c&&!r.archived);
+const cnt=(r,k)=>(S.logs[r.id]||{})[k||periodKey(r.cadence,new Date())]||0;
+const done=(r,k)=>cnt(r,k)>=(r.target||1);
+function periodPct(c){const l=rts(c);if(!l.length)return 0;return l.reduce((a,r)=>a+Math.min(1,cnt(r)/(r.target||1)),0)/l.length;}
+function streak(r){let n=0,d=new Date();
+  if(!done(r,periodKey(r.cadence,d)))d=shift(r.cadence,d,-1);
+  for(let i=0;i<400;i++){if(done(r,periodKey(r.cadence,d))){n++;d=shift(r.cadence,d,-1);}else break;}
+  return n;}
+function bump(r,dir){
+  const k=periodKey(r.cadence,new Date()),t=r.target||1;
+  S.logs[r.id]=S.logs[r.id]||{};
+  let v=S.logs[r.id][k]||0;
+  S.logs[r.id][k]= dir===-1 ? Math.max(0,v-1) : (v>=t?0:v+1);
+  save(); render();
+}
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const now=()=>Date.now();
+
+/* ============ save + sync ============ */
+let st=null;
+function save(push){
+  S.updated=now();
+  clearTimeout(st);
+  st=setTimeout(async()=>{
+    await writeLocal(JSON.stringify(S));
+    flash('Saved');
+    if(push!==false && local.get(TKEY) && local.get(GKEY) && S.autoSync!==false) pushGist(true);
+  },350);
+}
+function flash(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('on');clearTimeout(flash.t);flash.t=setTimeout(()=>el.classList.remove('on'),1500);}
+function pill(txt,cls){const p=document.getElementById('syncpill');p.textContent=txt;p.className='pill '+(cls||'');}
+
+function merge(a,b){ // b = other state; newer wins on conflicts
+  const newer = (b.updated||0) > (a.updated||0) ? b : a, older = newer===a?b:a;
+  const out={routines:[],logs:{},metrics:{},goals:[],journal:[],updated:Math.max(a.updated||0,b.updated||0),v:3,autoSync:newer.autoSync};
+  const byId=(arr)=>Object.fromEntries((arr||[]).map(x=>[x.id,x]));
+  ['routines','goals','journal'].forEach(k=>{
+    const o=byId(older[k]), n=byId(newer[k]);
+    out[k]=Object.values(Object.assign({},o,n));
+  });
+  out.metrics=Object.assign({},older.metrics||{},newer.metrics||{});
+  const ids=new Set([...Object.keys(older.logs||{}),...Object.keys(newer.logs||{})]);
+  ids.forEach(id=>{ out.logs[id]=Object.assign({},(older.logs||{})[id]||{},(newer.logs||{})[id]||{}); });
+  out.metricView=newer.metricView||older.metricView;
+  return out;
+}
+async function gistFetch(method,body){
+  const token=local.get(TKEY), id=local.get(GKEY);
+  if(!token||!id) throw new Error('Add your token and gist ID in Sync first.');
+  const res=await fetch('https://api.github.com/gists/'+id,{method,
+    headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json','Content-Type':'application/json'},
+    body:body?JSON.stringify(body):undefined});
+  if(!res.ok) throw new Error('GitHub said '+res.status+(res.status===401?' — token rejected':res.status===404?' — gist not found':''));
+  return res.json();
+}
+async function pullGist(quiet){
+  try{
+    pill('syncing…');
+    const g=await gistFetch('GET');
+    const f=g.files['cadence.json']||Object.values(g.files)[0];
+    let raw=f.truncated? await (await fetch(f.raw_url)).text() : f.content;
+    const remote=JSON.parse(raw);
+    S=merge(S,remote);
+    await writeLocal(JSON.stringify(S));
+    pill('synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),'live');
+    render(); if(!quiet)flash('Pulled from cloud');
+  }catch(e){ pill('sync error','off'); if(!quiet)alert(e.message); }
+}
+async function pushGist(quiet){
+  try{
+    pill('syncing…');
+    await gistFetch('PATCH',{files:{'cadence.json':{content:JSON.stringify(S,null,1)}}});
+    pill('synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),'live');
+    if(!quiet)flash('Pushed to cloud');
+  }catch(e){ pill('sync error','off'); if(!quiet)alert(e.message); }
+}
+
+/* ============ reminders ============ */
+async function askNotify(){
+  if(!('Notification' in window))return alert('This browser has no notification support. Use the calendar file instead.');
+  const p=await Notification.requestPermission();
+  flash(p==='granted'?'Reminders on':'Reminders blocked');
+  scheduleAll(); render();
+}
+function scheduleAll(){
+  timers.forEach(clearTimeout); timers=[];
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  S.routines.filter(r=>r.time&&r.cadence==='daily').forEach(r=>{
+    const [h,m]=r.time.split(':').map(Number);
+    const t=new Date(); t.setHours(h,m,0,0);
+    if(t<=new Date())return;
+    timers.push(setTimeout(()=>{
+      if(done(r))return;
+      const opts={body:'Not checked off yet.',icon:'icons/icon-192.png',tag:r.id};
+      navigator.serviceWorker?.ready.then(reg=>reg.showNotification(r.name,opts)).catch(()=>new Notification(r.name,opts));
+    },t-new Date()));
+  });
+}
+function ics(){
+  const dt=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Cadence//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:Cadence routines'];
+  S.routines.filter(r=>!r.archived).forEach(r=>{
+    const c=CAD.find(x=>x.id===r.cadence);
+    const [h,m]=(r.time||'08:00').split(':').map(Number);
+    const s=new Date(); s.setHours(h,m,0,0);
+    const e=new Date(s.getTime()+18e5);
+    L.push('BEGIN:VEVENT','UID:'+r.id+'@cadence','DTSTAMP:'+dt(new Date()),'DTSTART:'+dt(s),'DTEND:'+dt(e),
+      'RRULE:'+c.rrule,'SUMMARY:'+r.name.replace(/[,;]/g,' '),
+      'DESCRIPTION:'+(r.note||'').replace(/\n/g,'\\n').replace(/[,;]/g,' '),
+      'BEGIN:VALARM','TRIGGER:-PT0M','ACTION:DISPLAY','DESCRIPTION:'+r.name.replace(/[,;]/g,' '),'END:VALARM','END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.join('\r\n');
+}
+
+/* ============ seed ============ */
+function seed(){
+  const mk=(n,c,cat,target,note,time)=>({id:uid(),name:n,cadence:c,cat,target,note:note||'',link:'',img:'',time:time||'',created:iso(new Date())});
+  S.routines=[
+    mk('Morning light + water','daily','body',1,'Within 30 min of waking.','07:00'),
+    mk('Move 30 min','daily','body',1,'Walk, lift, or ride.','17:30'),
+    mk('Deep work block','daily','work',2,'Two 90-minute blocks, phone in another room.','09:00'),
+    mk('Read 20 min','daily','mind',1,'','21:00'),
+    mk('Kitchen reset','daily','home',1,'Counters clear before bed.','21:30'),
+    mk('Long training session','weekly','body',2,''),
+    mk('Weekly review','weekly','mind',1,'What worked, what slipped, what changes next week.'),
+    mk('Laundry + linens','weekly','home',1,''),
+    mk('Call someone I care about','weekly','people',1,''),
+    mk('Deep clean rotation','biweekly','home',1,'Rotate: bathroom, fridge, floors, car.'),
+    mk('Budget + subscriptions','monthly','money',1,'Cancel one thing you did not use.'),
+    mk('Monthly retro','monthly','mind',1,'Compare Signals month over month.'),
+    mk('Quarterly goal reset','quarterly','mind',1,'Close out old goals, set the next three.'),
+    mk('Car service + tires','quarterly','home',1,''),
+    mk('Dentist','semiannual','body',1,''),
+    mk('Insurance + rate shopping','semiannual','money',1,''),
+    mk('Physical + bloodwork','yearly','body',1,'Bring last year\u2019s numbers to compare.'),
+    mk('Taxes','yearly','money',1,''),
+    mk('Year in review','yearly','mind',1,'Read your log entries first.')
+  ];
+  S.goals=[{id:uid(),title:'Sub-8 minute mile',metric:'runs logged',target:60,current:0,due:''}];
+}
+
+/* ============ views ============ */
+const TABS=[['today','Today'],['routines','Routines'],['signals','Signals'],['goals','Goals'],['log','Log'],['ai','AI bridge'],['sync','Sync']];
+function render(){
+  document.getElementById('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('tabs').innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join('');
+  document.getElementById('view').innerHTML=({today:vToday,routines:vRoutines,signals:vSignals,goals:vGoals,log:vLog,ai:vAI,sync:vSync})[tab]();
+}
+function rail(){
+  return `<div class="rail">${CAD.map(c=>{
+    const p=Math.round(periodPct(c.id)*100),e=Math.round(elapsed(c.id)*100),n=rts(c.id).length;
+    return `<button class="railitem" data-cad="${c.id}" aria-current="${c.id===cad}">
+      <span class="rl"><span>${c.label}</span><span class="rc">${p}%</span></span>
+      <span class="meter"><i style="width:${p}%"></i></span>
+      <span class="sub">${n} routine${n===1?'':'s'} · ${leftText(c.id)} · ${e}% of ${c.short} gone</span></button>`;}).join('')}</div>`;
+}
+function routineRow(r,showHist){
+  const c=cnt(r),t=r.target||1,d=c>=t,sk=streak(r),sh=CAD.find(x=>x.id===r.cadence).short;
+  const hist=[...Array(8)].map((_,i)=>{const k=periodKey(r.cadence,shift(r.cadence,new Date(),-(7-i)));const v=(S.logs[r.id]||{})[k]||0;return `<span class="${v>=t?'on':v>0?'half':''}" title="${k}: ${v}/${t}"></span>`;}).join('');
+  const o=open[r.id];
+  return `<div class="rt ${d?'done':''}">
+    <button class="tick ${d?'done':c>0?'part':''}" data-tick="${r.id}" aria-label="Mark ${esc(r.name)}">${d?'✓':(t>1?c:'')}</button>
+    <div class="rtb"><div class="rtn">${esc(r.name)}</div>
+      <div class="rtm">
+        <span><i class="dot" style="background:${CATS[r.cat]||'#888'}"></i> ${esc(r.cat)}</span>
+        ${t>1?`<span>${c}/${t} this ${sh}</span>`:''}
+        ${r.time?`<span>${esc(r.time)}</span>`:''}
+        ${sk?`<span>${sk} ${sh}${sk>1?'s':''} running</span>`:''}
+        ${showHist?`<span class="hist">${hist}</span>`:''}
+        ${(r.note||r.link||r.img)?`<button class="mini" data-open="${r.id}">${o?'hide':'details'}</button>`:''}
+        ${t>1?`<button class="mini" data-minus="${r.id}">−1</button>`:''}
+      </div>
+      ${o?`<div class="det">${r.note?`<div class="note">${esc(r.note)}</div>`:''}${r.link?`<div style="margin-top:6px"><a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a></div>`:''}${r.img?`<img src="${esc(r.img)}" alt="">`:''}</div>`:''}
+    </div></div>`;
+}
+function vToday(){
+  const day=rts('daily'),other=CAD.slice(1).flatMap(c=>rts(c.id).filter(r=>!done(r)));
+  const best=S.routines.map(r=>[streak(r),r]).sort((a,b)=>b[0]-a[0])[0];
+  const m=S.metrics[iso(new Date())]||{};
+  return `<div class="stats">
+      <div class="stat"><b>${Math.round(periodPct('daily')*100)}%</b><span>of today done</span></div>
+      <div class="stat"><b>${day.filter(r=>done(r)).length}/${day.length}</b><span>daily routines</span></div>
+      <div class="stat"><b>${best&&best[0]?best[0]:0}</b><span>longest run · ${best&&best[0]?esc(best[1].name):'—'}</span></div>
+      <div class="stat"><b>${m.steps||'—'}</b><span>steps logged</span></div>
+      <div class="stat"><b>${m.sleep||'—'}</b><span>hours slept</span></div>
+    </div>
+    <div class="grid">${rail()}<div>
+      <div class="panel"><h2>Today</h2><p class="lede">Tap the circle to complete. Tap again to clear.</p>
+        ${day.length?day.map(r=>routineRow(r,true)).join(''):'<p class="empty">No daily routines yet.</p>'}</div>
+      <div class="panel"><h2>Open in longer cycles</h2><p class="lede">Still unchecked in their current period.</p>
+        ${other.length?other.map(r=>routineRow(r,false)).join(''):'<p class="empty">Every longer cycle is clear.</p>'}</div>
+    </div></div>`;
+}
+function vRoutines(){
+  const list=rts(cad),c=CAD.find(x=>x.id===cad);
+  return `<div class="grid">${rail()}<div>
+    <div class="panel"><h2>${c.label}</h2>
+      <p class="lede">${list.length} routine${list.length===1?'':'s'} · ${leftText(cad)} in this ${c.short}. Squares are the last 8 periods.</p>
+      ${list.length?list.map(r=>routineRow(r,true)+`<div style="margin:-4px 0 8px 41px"><button class="mini" data-edit="${r.id}">edit</button> <button class="mini" data-del="${r.id}">delete</button></div>`).join(''):'<p class="empty">Nothing here yet.</p>'}</div>
+    <div class="panel"><h2>Add a routine</h2>
+      <label class="field"><span>What is it</span><input id="n-name" placeholder="Stretch before bed"></label>
+      <div class="row">
+        <label class="field"><span>How often</span><select id="n-cad">${CAD.map(x=>`<option value="${x.id}" ${x.id===cad?'selected':''}>${x.label}</option>`).join('')}</select></label>
+        <label class="field"><span>Area</span><select id="n-cat">${Object.keys(CATS).map(x=>`<option>${x}</option>`).join('')}</select></label>
+      </div>
+      <div class="row">
+        <label class="field"><span>Times per period</span><input type="number" id="n-target" value="1" min="1"></label>
+        <label class="field"><span>Reminder time</span><input type="time" id="n-time"></label>
+      </div>
+      <div class="row">
+        <label class="field"><span>Reference link</span><input id="n-link" placeholder="https://"></label>
+        <label class="field"><span>Image URL</span><input id="n-img" placeholder="https://"></label>
+      </div>
+      <label class="field"><span>Notes, cues, why it matters</span><textarea id="n-note"></textarea></label>
+      <div class="btns"><button class="btn" id="add">Add routine</button></div></div>
+    </div></div>`;
+}
+function vSignals(){
+  const d=iso(new Date()),m=S.metrics[d]||{};
+  const days=[...Array(30)].map((_,i)=>{const x=new Date();x.setDate(x.getDate()-(29-i));return iso(x);});
+  const sel=S.metricView||'steps';
+  const vals=days.map(k=>Number((S.metrics[k]||{})[sel])||null);
+  const has=vals.filter(v=>v!=null);
+  const mx=Math.max(...has,1),mn=Math.min(...has,0);
+  const pts=vals.map((v,i)=>v==null?null:[i/29*100,100-((v-mn)/((mx-mn)||1))*88-6]).filter(Boolean);
+  const path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const avg=has.length?has.reduce((a,b)=>a+b,0)/has.length:0;
+  return `<div class="panel"><h2>Signals</h2>
+    <p class="lede">Numbers from your watch, phone, and scale. Type them here, or paste an export under AI bridge.</p>
+    <div class="row">${METRICS.map(([k,l])=>`<label class="field"><span>${l}</span><input type="number" step="any" data-metric="${k}" value="${m[k]!=null?m[k]:''}"></label>`).join('')}</div>
+    <label class="field"><span>How the day actually felt</span><textarea data-metric="note">${esc(m.note||'')}</textarea></label>
+    <div class="btns"><button class="btn" id="savemetric">Save today's numbers</button></div>
+    <hr class="hr">
+    <div class="btns" style="margin-bottom:10px">${METRICS.map(([k,l])=>`<button class="tagbtn" data-mv="${k}" aria-pressed="${k===sel}">${l}</button>`).join('')}</div>
+    ${has.length>1?`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:150px;background:var(--ground);border-radius:3px"><path d="${path}" fill="none" stroke="var(--pine)" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>
+      <p class="lede" style="margin-top:8px">Last 30 days · high ${mx} · low ${mn} · average ${avg.toFixed(1)} · ${has.length} entries</p>`:'<p class="empty">Log a few days and a trend line appears here.</p>'}
+    <hr class="hr">
+    <table><tr><th>Date</th>${METRICS.map(([,l])=>`<th>${l}</th>`).join('')}</tr>
+    ${days.slice().reverse().filter(k=>S.metrics[k]).slice(0,14).map(k=>`<tr><td>${k}</td>${METRICS.map(([mk])=>`<td>${(S.metrics[k]||{})[mk]!=null?S.metrics[k][mk]:'·'}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="8" class="empty">No entries yet.</td></tr>'}
+    </table></div>`;
+}
+function vGoals(){
+  return `<div class="panel"><h2>Goals</h2><p class="lede">Bigger than a routine. Point each one at the routines that feed it.</p>
+    ${S.goals.length?S.goals.map(g=>{const p=Math.min(100,Math.round((g.current/(g.target||1))*100));
+      return `<div class="goal"><div style="display:flex;justify-content:space-between;gap:10px"><b style="font-weight:500">${esc(g.title)}</b><span style="font-family:var(--serif)">${g.current}/${g.target}</span></div>
+      <div class="bar"><i style="width:${p}%"></i></div>
+      <div class="rtm" style="margin-top:6px"><span>${esc(g.metric||'')}</span>${g.due?`<span>by ${esc(g.due)}</span>`:''}
+      <button class="mini" data-gp="${g.id}">+1</button><button class="mini" data-gm="${g.id}">−1</button><button class="mini" data-gd="${g.id}">delete</button></div></div>`;}).join(''):'<p class="empty">No goals yet.</p>'}
+    <hr class="hr">
+    <label class="field"><span>Goal</span><input id="g-title" placeholder="Run a half marathon"></label>
+    <div class="row"><label class="field"><span>Counted in</span><input id="g-metric" placeholder="training runs"></label>
+    <label class="field"><span>Target number</span><input type="number" id="g-target" value="10"></label></div>
+    <label class="field"><span>By when</span><input type="date" id="g-due"></label>
+    <div class="btns"><button class="btn" id="addgoal">Add goal</button></div></div>`;
+}
+function vLog(){
+  return `<div class="panel"><h2>Log</h2><p class="lede">Context the numbers miss. This is the memory an AI reads back to you later.</p>
+    <label class="field"><textarea id="j-text" placeholder="What changed, what you tried, what you noticed."></textarea></label>
+    <div class="btns"><button class="btn" id="addlog">Save entry</button></div><hr class="hr">
+    ${S.journal.length?S.journal.slice().reverse().map(j=>`<div class="goal"><div class="rtm"><span>${j.date}</span><button class="mini" data-jd="${j.id}">delete</button></div><div class="note" style="margin-top:4px">${esc(j.text)}</div></div>`).join(''):'<p class="empty">No entries yet.</p>'}</div>`;
+}
+function vAI(){
+  const url=local.get(GKEY)?`https://gist.githubusercontent.com/raw/`:'';
+  return `<div class="panel"><h2>AI bridge</h2>
+    <p class="lede">Everything lives in one JSON file. Hand it to any AI, then paste the improved version back.</p>
+    <div class="btns">
+      <button class="btn" id="copyjson">Copy all data</button>
+      <button class="btn ghost" id="copybrief">Copy data + review prompt</button>
+      <button class="btn ghost" id="dl">Download backup</button>
+      <button class="btn ghost" id="dlics">Download calendar file</button>
+    </div>
+    <p class="lede" style="margin-top:12px">The calendar file puts every routine into Apple or Google Calendar on its real repeat schedule, with an alert. That is the most reliable way to get reminders on a phone.</p>
+    <hr class="hr">
+    <h2>Bring data in</h2>
+    <p class="lede">Paste a full JSON file to merge it, or paste rows like <code>2026-08-30, steps 9210, sleep 7.4</code> to fill Signals.</p>
+    <label class="field"><textarea id="imp" style="min-height:110px" placeholder="Paste JSON or health rows"></textarea></label>
+    <div class="btns"><button class="btn" id="doimp">Import</button></div>
+    <hr class="hr">
+    <div class="btns"><button class="btn warn" id="reset">Erase everything</button></div></div>`;
+}
+function vSync(){
+  const hasT=!!local.get(TKEY),hasG=!!local.get(GKEY);
+  const notif=('Notification' in window)?Notification.permission:'unsupported';
+  return `<div class="panel"><h2>Sync across devices</h2>
+    <p class="lede">Your file lives in a private GitHub gist. Every device pulls and pushes the same file, so your phone, PC, and MacBook stay in step. Setup steps are in README.md.</p>
+    <label class="field"><span>Gist ID ${hasG?'· saved':''}</span><input id="s-gist" placeholder="a1b2c3…" value="${esc(local.get(GKEY)||'')}"></label>
+    <label class="field"><span>GitHub token, gist scope only ${hasT?'· saved on this device':''}</span><input id="s-token" type="password" placeholder="${hasT?'••••••••  leave blank to keep':'github_pat_… or ghp_…'}"></label>
+    <div class="btns">
+      <button class="btn" id="s-save">Save connection</button>
+      <button class="btn ghost" id="s-pull">Pull now</button>
+      <button class="btn ghost" id="s-push">Push now</button>
+      <button class="btn ghost" id="s-clear">Forget token on this device</button>
+    </div>
+    <p class="lede" style="margin-top:12px">The token stays on this device and is never written into the synced file. Give it gist access only, nothing else.</p>
+    <label class="field" style="margin-top:6px"><span><input type="checkbox" id="s-auto" ${S.autoSync!==false?'checked':''} style="width:auto;margin-right:6px">Push automatically after every change</span></label>
+    <hr class="hr">
+    <h2>Reminders on this device</h2>
+    <p class="lede">Status: ${notif}. Browser reminders only fire while the app has been opened recently. For alerts that always land, use the calendar file under AI bridge.</p>
+    <div class="btns"><button class="btn" id="notif">Turn on reminders</button><button class="btn ghost" id="dlics2">Download calendar file</button></div>
+    <hr class="hr">
+    <h2>Install as an app</h2>
+    <p class="lede">iPhone: open the page in Safari, tap Share, then Add to Home Screen.<br>
+    Android: Chrome menu, then Install app.<br>
+    Windows or Mac: Chrome or Edge, the install icon in the address bar.</p>
+    </div>`;
+}
+
+/* ============ export helpers ============ */
+const snapshot=()=>JSON.stringify(S,null,1);
+function brief(){
+  return `You are my routine coach. Below is my full Cadence tracking file as JSON.
+
+1. Which routines am I actually keeping, and which am I quietly abandoning? Cite the evidence.
+2. Correlate Signals (steps, sleep, resting HR, mood, energy) against completion rates. Name what moves what.
+3. Where am I overloaded, where is a cadence wrong, and what should I cut?
+4. Suggest at most three new routines with cadence and target, and say what each replaces.
+5. Return updated JSON in the same structure, keeping all existing ids, so I can paste it back.
+
+\`\`\`json
+${snapshot()}
+\`\`\``;
+}
+async function copy(text,msg){
+  try{await navigator.clipboard.writeText(text);flash(msg);}
+  catch(e){const a=document.createElement('textarea');a.value=text;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();flash(msg);}
+}
+function download(name,text,type){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type||'application/json'}));a.download=name;a.click();
+}
+function parseRows(txt){
+  let n=0;
+  txt.split(/\n+/).forEach(line=>{
+    const dm=line.match(/(\d{4}-\d{2}-\d{2})/); if(!dm)return;
+    const d=dm[1],rec=S.metrics[d]||{};let hit=false;
+    METRICS.forEach(([k])=>{const m=line.match(new RegExp(k+'\\D{0,3}(-?[\\d.]+)','i'));if(m){rec[k]=Number(m[1]);hit=true;}});
+    if(hit){S.metrics[d]=rec;n++;}
+  });
+  return n;
+}
+
+/* ============ events ============ */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b||!ready)return; const d=b.dataset;
+  if(d.tab){tab=d.tab;render();return;}
+  if(d.cad){cad=d.cad;if(tab==='today')tab='routines';render();return;}
+  if(d.tick){bump(S.routines.find(r=>r.id===d.tick),1);return;}
+  if(d.minus){bump(S.routines.find(r=>r.id===d.minus),-1);return;}
+  if(d.open){open[d.open]=!open[d.open];render();return;}
+  if(d.del){if(confirm('Delete this routine and its history?')){S.routines=S.routines.filter(r=>r.id!==d.del);delete S.logs[d.del];save();render();}return;}
+  if(d.edit){const r=S.routines.find(x=>x.id===d.edit);
+    const n=prompt('Rename routine',r.name); if(n===null)return;
+    r.name=n.trim()||r.name;
+    const t=prompt('Times per period',r.target||1); if(t)r.target=Math.max(1,parseInt(t)||1);
+    const tm=prompt('Reminder time, HH:MM, blank for none',r.time||''); if(tm!==null)r.time=tm.trim();
+    const nt=prompt('Notes',r.note||''); if(nt!==null)r.note=nt;
+    save();scheduleAll();render();return;}
+  if(d.mv){S.metricView=d.mv;save();render();return;}
+  if(d.gp||d.gm){const g=S.goals.find(x=>x.id===(d.gp||d.gm));g.current=Math.max(0,g.current+(d.gp?1:-1));save();render();return;}
+  if(d.gd){S.goals=S.goals.filter(x=>x.id!==d.gd);save();render();return;}
+  if(d.jd){S.journal=S.journal.filter(x=>x.id!==d.jd);save();render();return;}
+
+  const id=b.id;
+  if(id==='add'){
+    const name=document.getElementById('n-name').value.trim(); if(!name){flash('Give it a name first');return;}
+    S.routines.push({id:uid(),name,cadence:document.getElementById('n-cad').value,cat:document.getElementById('n-cat').value,
+      target:Math.max(1,parseInt(document.getElementById('n-target').value)||1),time:document.getElementById('n-time').value,
+      link:document.getElementById('n-link').value.trim(),img:document.getElementById('n-img').value.trim(),
+      note:document.getElementById('n-note').value,created:iso(new Date())});
+    cad=S.routines[S.routines.length-1].cadence; save(); scheduleAll(); render(); flash('Routine added');
+  }
+  if(id==='savemetric'){
+    const d2=iso(new Date()),rec=S.metrics[d2]||{};
+    document.querySelectorAll('[data-metric]').forEach(el=>{const v=el.value;if(v==='')delete rec[el.dataset.metric];else rec[el.dataset.metric]=el.type==='number'?Number(v):v;});
+    S.metrics[d2]=rec; save(); render(); flash('Numbers saved');
+  }
+  if(id==='addgoal'){
+    const t2=document.getElementById('g-title').value.trim(); if(!t2){flash('Name the goal first');return;}
+    S.goals.push({id:uid(),title:t2,metric:document.getElementById('g-metric').value.trim(),target:Number(document.getElementById('g-target').value)||1,current:0,due:document.getElementById('g-due').value});
+    save(); render();
+  }
+  if(id==='addlog'){
+    const x=document.getElementById('j-text').value.trim(); if(!x)return;
+    S.journal.push({id:uid(),date:iso(new Date()),text:x}); save(); render(); flash('Entry saved');
+  }
+  if(id==='copyjson')copy(snapshot(),'Data copied');
+  if(id==='copybrief')copy(brief(),'Data and prompt copied');
+  if(id==='dl')download('cadence-'+iso(new Date())+'.json',snapshot());
+  if(id==='dlics'||id==='dlics2')download('cadence-routines.ics',ics(),'text/calendar');
+  if(id==='doimp'){
+    const txt=document.getElementById('imp').value.trim(); if(!txt)return;
+    if(txt.startsWith('{')){try{const o=JSON.parse(txt);if(!o.routines)throw 0;o.updated=o.updated||now();S=merge(S,o);save();render();flash('File merged');}catch(err){flash('That JSON did not parse');}}
+    else{const n=parseRows(txt);save();render();flash(n?n+' days merged':'No dated rows found');}
+  }
+  if(id==='reset'&&confirm('Erase all routines, history, and notes on this device?')){S={routines:[],logs:{},metrics:{},goals:[],journal:[],updated:now(),v:3};seed();save();render();}
+  if(id==='s-save'){
+    const g=document.getElementById('s-gist').value.trim(), t=document.getElementById('s-token').value.trim();
+    if(g)local.set(GKEY,g); if(t)local.set(TKEY,t);
+    S.autoSync=document.getElementById('s-auto').checked;
+    save(false); flash('Connection saved'); pullGist();
+  }
+  if(id==='s-pull')pullGist();
+  if(id==='s-push')pushGist();
+  if(id==='s-clear'){local.del(TKEY);flash('Token removed from this device');render();}
+  if(id==='notif')askNotify();
+});
+document.addEventListener('change',e=>{ if(e.target.id==='s-auto'){S.autoSync=e.target.checked;save(false);} });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&local.get(TKEY)&&local.get(GKEY))pullGist(true); });
+
+/* ============ boot ============ */
+(async function(){
+  const raw=await readLocal();
+  if(raw){ try{S=Object.assign(S,JSON.parse(raw));}catch(e){} }
+  if(!S.routines.length)seed();
+  ready=true; render(); scheduleAll();
+  if(local.get(TKEY)&&local.get(GKEY))pullGist(true); else pill('local only');
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+})();
+</script>
+</body>
+</html>
