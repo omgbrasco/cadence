@@ -48,3 +48,30 @@ Other AI tools (ChatGPT, Gemini, etc.) can be handed this data to read and
 analyze - that is the point of AI-CONTEXT.md. But they should not modify
 files in this project folder directly. Treat this repo as read-only for
 other AI unless Braedon explicitly says otherwise.
+
+## Keep a changelog, every time
+
+Whenever you make a change to this app or its files, add an entry to
+CHANGELOG.md (newest entry on top) before you're done: what changed, and
+anything you couldn't do. This is on top of git history, not instead of
+it - git already lets any version be recovered exactly, but the changelog
+is the plain-English version Braedon can read without git commands.
+
+## The feedback and reports loop (in the app's Feedback tab)
+
+The app has a Feedback tab with two parts, both synced through the same
+private gist as the routine data, as separate files inside it:
+
+- `feedback.json` - notes Braedon leaves for whichever AI works on this
+  project next. Shape: `{updated, entries:[{id, text, ts, status}]}`.
+  Each entry starts as `status:"new"`. If you (an AI session) act on one,
+  you can update its status - just don't delete or rewrite his text.
+- `reports.json` - read-only from the app's side; nothing in the app
+  writes to it. Shape: `{reports:[{id, ts, date, changes, blocked}]}`.
+  If you finish a work session on this project, you can add an entry
+  here yourself (via the gist API, same credentials Braedon already set
+  up for sync) so the app's "Last run" section shows what changed and
+  what couldn't be done. `changes` and `blocked` are both plain text.
+
+Check `feedback.json` for anything with `status:"new"` before starting
+work - that's Braedon telling you something without opening a chat.
