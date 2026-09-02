@@ -202,14 +202,20 @@ function periodKey(c,d){
   if(c==='semiannual')return y+'-H'+(d.getMonth()<6?1:2);
   return String(y);
 }
+const daysInMonth=(y,m)=>new Date(y,m+1,0).getDate();
 function shift(c,d,n){const x=new Date(d);
   if(c==='daily')x.setDate(x.getDate()+n);
   else if(c==='weekly')x.setDate(x.getDate()+7*n);
   else if(c==='biweekly')x.setDate(x.getDate()+14*n);
-  else if(c==='monthly')x.setMonth(x.getMonth()+n);
-  else if(c==='quarterly')x.setMonth(x.getMonth()+3*n);
-  else if(c==='semiannual')x.setMonth(x.getMonth()+6*n);
-  else x.setFullYear(x.getFullYear()+n);
+  else if(c==='monthly'||c==='quarterly'||c==='semiannual'){
+    const step=c==='monthly'?1:c==='quarterly'?3:6, day=x.getDate();
+    x.setDate(1); x.setMonth(x.getMonth()+step*n);
+    x.setDate(Math.min(day,daysInMonth(x.getFullYear(),x.getMonth())));
+  } else {
+    const day=x.getDate(), m=x.getMonth();
+    x.setDate(1); x.setFullYear(x.getFullYear()+n);
+    x.setDate(Math.min(day,daysInMonth(x.getFullYear(),m)));
+  }
   return x;}
 function bounds(c,d){
   const y=d.getFullYear(),m=d.getMonth();

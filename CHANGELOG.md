@@ -10,6 +10,26 @@ The synced data itself (your routines, logs, etc.) also has its own
 history on github.com under the gist's "Revisions" link, separate
 from this file.
 
+## 2026-09-02 — Bug fix: wrong streaks/history near month-end
+
+**What changed:** Found and fixed a real bug in the date math for
+monthly, every-3-months, every-6-months, and yearly routines. If
+"today" fell on a day that doesn't exist in the previous month (like
+the 29th–31st, or Feb 29 for yearly routines made on a leap day), the
+app's "go back one period" math landed back in the *same* month
+instead of the one before it. That made streak counts too high and
+could scramble the little history dots on a routine's detail view. I
+wrote a standalone test script (not part of the app) that checked this
+and the ISO week-number math against known-correct values across the
+last 5+ years and several timezones — the week-number math was fine,
+this month math was not. Fixed by clamping the day to a valid one in
+the target month instead of letting it silently roll into the wrong
+month. Re-ran the same tests after the fix to confirm it's correct
+and that daily/weekly/every-2-weeks routines (which didn't have this
+problem) are unaffected.
+
+**Couldn't do:** Nothing outstanding from this pass.
+
 ## 2026-09-02 — Feedback and Last Run
 
 **What changed:** Added a "Feedback" tab. It has two parts on one screen:
