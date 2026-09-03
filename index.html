@@ -202,14 +202,20 @@ function periodKey(c,d){
   if(c==='semiannual')return y+'-H'+(d.getMonth()<6?1:2);
   return String(y);
 }
+const daysInMonth=(y,m)=>new Date(y,m+1,0).getDate();
 function shift(c,d,n){const x=new Date(d);
   if(c==='daily')x.setDate(x.getDate()+n);
   else if(c==='weekly')x.setDate(x.getDate()+7*n);
   else if(c==='biweekly')x.setDate(x.getDate()+14*n);
-  else if(c==='monthly')x.setMonth(x.getMonth()+n);
-  else if(c==='quarterly')x.setMonth(x.getMonth()+3*n);
-  else if(c==='semiannual')x.setMonth(x.getMonth()+6*n);
-  else x.setFullYear(x.getFullYear()+n);
+  else if(c==='monthly'||c==='quarterly'||c==='semiannual'){
+    const step=c==='monthly'?1:c==='quarterly'?3:6, day=x.getDate();
+    x.setDate(1); x.setMonth(x.getMonth()+step*n);
+    x.setDate(Math.min(day,daysInMonth(x.getFullYear(),x.getMonth())));
+  } else {
+    const day=x.getDate(), m=x.getMonth();
+    x.setDate(1); x.setFullYear(x.getFullYear()+n);
+    x.setDate(Math.min(day,daysInMonth(x.getFullYear(),m)));
+  }
   return x;}
 function bounds(c,d){
   const y=d.getFullYear(),m=d.getMonth();
@@ -239,6 +245,12 @@ function bump(r,dir){
   S.logs[r.id]=S.logs[r.id]||{};
   let v=S.logs[r.id][k]||0;
   S.logs[r.id][k]= dir===-1 ? Math.max(0,v-1) : (v>=t?0:v+1);
+  save(); render();
+}
+function step(r,dir){
+  const k=periodKey(r.cadence,new Date());
+  S.logs[r.id]=S.logs[r.id]||{};
+  S.logs[r.id][k]=Math.max(0,(S.logs[r.id][k]||0)+dir);
   save(); render();
 }
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -271,7 +283,7 @@ function saveFeedback(push){
 
 function merge(a,b){ // b = other state; newer wins on conflicts
   const newer = (b.updated||0) > (a.updated||0) ? b : a, older = newer===a?b:a;
-  const out={routines:[],logs:{},metrics:{},goals:[],journal:[],updated:Math.max(a.updated||0,b.updated||0),v:3,autoSync:newer.autoSync};
+  const out={routines:[],logs:{},metrics:{},goals:[],journal:[],updated:Math.max(a.updated||0,b.updated||0),v:3,autoSync:newer.autoSync!==undefined?newer.autoSync:older.autoSync};
   const byId=(arr)=>Object.fromEntries((arr||[]).map(x=>[x.id,x]));
   ['routines','goals','journal'].forEach(k=>{
     const o=byId(older[k]), n=byId(newer[k]);
@@ -351,8 +363,13 @@ async function pullGist(quiet){
       }catch(e){}
     }
     pill('synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),'live');
-    render(); if(!quiet)flash('Pulled from cloud');
+    if(!(quiet&&isTyping()))render();
+    if(!quiet)flash('Pulled from cloud');
   }catch(e){ pill('sync error','off'); if(!quiet)alert(e.message); }
+}
+function isTyping(){
+  const el=document.activeElement, view=document.getElementById('view');
+  return !!(el && view && view.contains(el) && (el.tagName==='INPUT'||el.tagName==='TEXTAREA'));
 }
 async function pushGist(quiet){
   try{
@@ -394,7 +411,7 @@ function ics(){
   const dt=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
   const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Cadence//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:Cadence routines'];
   S.routines.filter(r=>!r.archived).forEach(r=>{
-    const c=CAD.find(x=>x.id===r.cadence);
+    const c=CAD.find(x=>x.id===r.cadence)||CAD[0];
     const [h,m]=(r.time||'08:00').split(':').map(Number);
     const s=new Date(); s.setHours(h,m,0,0);
     const e=new Date(s.getTime()+18e5);
@@ -449,7 +466,7 @@ function chipRail(){
 }
 function routineRow(r,opts){
   opts=opts||{};
-  const c=cnt(r),t=r.target||1,d=c>=t,sk=streak(r),cd=CAD.find(x=>x.id===r.cadence),sh=cd.short;
+  const c=cnt(r),t=r.target||1,d=c>=t,sk=streak(r),cd=CAD.find(x=>x.id===r.cadence)||CAD[0],sh=cd.short;
   const isOpen=!!open[r.id], isEdit=editingId===r.id;
   const hist=[...Array(8)].map((_,i)=>{const k=periodKey(r.cadence,shift(r.cadence,new Date(),-(7-i)));const v=(S.logs[r.id]||{})[k]||0;return `<span class="${v>=t?'on':v>0?'half':''}" title="${k}: ${v}/${t}"></span>`;}).join('');
   const hasDetail=r.note||r.link||r.img;
@@ -462,7 +479,7 @@ function routineRow(r,opts){
       ${t>1?`<div class="stepper"><button class="stepbtn" data-minus="${r.id}">−</button><span class="steplabel">${c}/${t}</span><button class="stepbtn" data-plus="${r.id}">+</button></div>`:''}
       <div class="hist">${hist}</div>
       ${r.note?`<div class="note" style="margin-top:10px">${esc(r.note)}</div>`:''}
-      ${r.link?`<div style="margin-top:8px"><a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a></div>`:''}
+      ${r.link?`<div style="margin-top:8px">${/^https?:\/\//i.test(r.link)?`<a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a>`:esc(r.link)}</div>`:''}
       ${r.img?`<img src="${esc(r.img)}" alt="">`:''}
       ${opts.editable?`<div class="btns" style="margin-top:12px"><button class="btn ghost" data-editrow="${r.id}">Edit</button><button class="btn ghost" data-del="${r.id}">Delete</button></div>`:''}`;
   return `<div class="rt ${d?'done':''} ${isOpen?'open':''}">
@@ -677,8 +694,8 @@ document.addEventListener('click',e=>{
   if(d.cad){cad=d.cad;render();return;}
   if(d.subtab){insSub=d.subtab;render();return;}
   if(d.tick){bump(S.routines.find(r=>r.id===d.tick),1);return;}
-  if(d.plus){bump(S.routines.find(r=>r.id===d.plus),1);return;}
-  if(d.minus){bump(S.routines.find(r=>r.id===d.minus),-1);return;}
+  if(d.plus){step(S.routines.find(r=>r.id===d.plus),1);return;}
+  if(d.minus){step(S.routines.find(r=>r.id===d.minus),-1);return;}
   if(d.open){open[d.open]=!open[d.open];render();return;}
   if(d.editrow){editingId=d.editrow;open[d.editrow]=true;render();return;}
   if(d.canceledit){editingId=null;render();return;}
@@ -693,7 +710,7 @@ document.addEventListener('click',e=>{
     r.img=document.getElementById('e-img-'+id).value.trim();
     r.note=document.getElementById('e-note-'+id).value;
     editingId=null; save(); scheduleAll(); render(); flash('Routine updated');return;}
-  if(d.del){if(confirm('Delete this routine and its history?')){S.routines=S.routines.filter(r=>r.id!==d.del);delete S.logs[d.del];editingId=null;save();render();}return;}
+  if(d.del){if(confirm('Delete this routine and its history?')){S.routines=S.routines.filter(r=>r.id!==d.del);delete S.logs[d.del];if(editingId===d.del)editingId=null;save();render();}return;}
   if(d.mv){S.metricView=d.mv;save();render();return;}
   if(d.gp||d.gm){const g=S.goals.find(x=>x.id===(d.gp||d.gm));g.current=Math.max(0,g.current+(d.gp?1:-1));save();render();return;}
   if(d.gd){S.goals=S.goals.filter(x=>x.id!==d.gd);save();render();return;}
