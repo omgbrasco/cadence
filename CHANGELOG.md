@@ -10,6 +10,21 @@ The synced data itself (your routines, logs, etc.) also has its own
 history on github.com under the gist's "Revisions" link, separate
 from this file.
 
+## 2026-09-02 — Health data mailbox
+
+**What changed:** The app now checks for a file called `health-inbox.txt`
+in the synced gist every time it syncs. If a phone Shortcut (or anything
+else) drops a line like `2026-09-02 steps 8400 sleep 7.1 rhr 54` in
+there, the app reads it, files the numbers under that date the same way
+manual paste-import already does, then clears the mailbox so it's not
+imported twice. Nothing changes if the file is empty or missing - the
+manual paste-import box still works exactly as before, this is just a
+second, automatic way in.
+
+**Couldn't do:** The phone-side half (the actual Shortcuts automation
+that reads Health and writes to this file) still needs to be built on
+the phone - that can't be done from here.
+
 ## 2026-09-02 — Feedback and Last Run
 
 **What changed:** Added a "Feedback" tab. It has two parts on one screen:

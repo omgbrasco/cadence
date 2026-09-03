@@ -333,6 +333,23 @@ async function pullGist(quiet){
         RPT=JSON.parse(rraw)||{reports:[]};
       }catch(e){}
     }
+    const hf=g.files['health-inbox.txt'];
+    if(hf){
+      try{
+        let hraw=hf.truncated? await (await fetch(hf.raw_url)).text() : hf.content;
+        if(/\d{4}-\d{2}-\d{2}/.test(hraw||'')){
+          const n=parseRows(hraw);
+          if(n){
+            S.updated=now();
+            await writeLocal(JSON.stringify(S));
+            await gistFetch('PATCH',{files:{
+              'cadence.json':{content:JSON.stringify(S,null,1)},
+              'health-inbox.txt':{content:'no new health data\n'}
+            }});
+          }
+        }
+      }catch(e){}
+    }
     pill('synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),'live');
     render(); if(!quiet)flash('Pulled from cloud');
   }catch(e){ pill('sync error','off'); if(!quiet)alert(e.message); }
