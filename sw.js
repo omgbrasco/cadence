@@ -1,4 +1,4 @@
-const CACHE = 'cadence-v3';
+const CACHE = 'cadence-v4';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {

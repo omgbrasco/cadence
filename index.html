@@ -134,6 +134,26 @@
   .tabbtn svg{width:24px;height:24px}
   .tabbtn span{font-size:11.5px;font-weight:700}
   .tabdot{position:absolute;top:4px;right:16px;width:9px;height:9px;border-radius:50%;background:var(--clay);border:2px solid #0E1016}
+
+  /* ---- desktop layout: bottom tab bar becomes a left sidebar ---- */
+  @media (min-width:900px){
+    body{padding-left:232px}
+    .wrap{max-width:940px;padding:34px 34px 56px}
+    .masthead{justify-content:flex-end;margin-bottom:20px}
+    .masthead .title{display:none}
+    .date{font-size:15px}
+    .stats{grid-template-columns:repeat(4,1fr);gap:14px}
+    .stat{padding:18px}
+    .stat b{font-size:34px}
+    .tabbar{top:0;bottom:0;right:auto;width:232px;flex-direction:column;justify-content:flex-start;gap:6px;
+      padding:26px 16px;border-top:none;border-right:1px solid var(--glass-border);
+      background:rgba(14,16,22,.72)}
+    .tabbar::before{content:"Cadence";font-family:var(--serif);font-size:26px;font-weight:700;
+      color:var(--ink);padding:4px 14px 22px;line-height:1}
+    .tabbtn{flex-direction:row;justify-content:flex-start;gap:12px;width:100%;padding:12px 14px;min-width:0}
+    .tabbtn span{font-size:15px}
+    .tabdot{top:15px;right:14px}
+  }
 </style>
 </head>
 <body>
