@@ -2,6 +2,46 @@
 
 Plain-English record of every version of this app. Newest first.
 
+## 2026-09-11 — Desktop layout, and a fix for updates not reaching your phone
+
+**What changed:** Two things.
+
+First, the app now has a real desktop layout. On any screen 900 pixels
+wide or more, the bar of buttons that sits at the bottom on a phone moves
+to the left side as a proper sidebar with the Cadence name at the top, the
+four summary tiles go across in one row instead of stacking two-by-two,
+and the content column gets wider. On a phone nothing changed at all —
+the whole thing is inside one rule that only switches on at desktop
+widths, and the phone layout was checked side by side before and after to
+confirm it is identical.
+
+Second, and more important: installed copies of the app were not picking
+up new versions. The offline helper (the "service worker") was written to
+check the network first so updates would land, but the way it asked for
+files still allowed the browser to answer from its own ten-minute-old
+copy — GitHub sends every file with a ten minute reuse window. So for
+ten minutes after any update the helper served the old file, and then
+saved that old copy as if it were the new one, which could keep a phone
+stuck on an old version indefinitely. Both places this happened now ask
+the server directly and skip the browser's own copy. It still asks "has
+this changed?" rather than re-downloading everything, so it stays fast and
+still works with no signal. It also no longer saves error pages, so a file
+briefly missing mid-update can't get stored as if it were the app.
+
+**How it was checked:** The desktop and phone layouts were both loaded and
+compared before and after. For the update bug, the live server headers
+were read to confirm the ten minute window, and the running helper inside
+a browser was inspected — it had indeed already saved a pre-change copy of
+the app under its new name, which is the bug happening in real time.
+
+**Couldn't do:** Syncing is still not switched on. The app still says
+"local only", which means this device keeps its own data and does not
+share it with your other devices. That needs a private gist and a GitHub
+token, and both have to be created by you in your own GitHub account —
+credentials are never made on your behalf. Steps are in README.md
+section 3. Until that is done, your phone and your PC each keep separate
+data.
+
 ## 2026-09-02 — More bug fixes: syncing and routine cards
 
 **What changed:** A second pass over the sync logic and the newer
